@@ -12,6 +12,9 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -21,7 +24,19 @@ from homeassistant.helpers.selector import (
 )
 
 from .api import DEFAULT_BASE_URL, FmTrackApi, FmTrackAuthError, FmTrackError
-from .const import CONF_BASE_URL, CONF_USE_STREAM, CONF_VEHICLES, DEFAULT_USE_STREAM, DOMAIN
+from .const import (
+    CONF_BASE_URL,
+    CONF_PLATFORM_EVENTS,
+    CONF_SCAN_INTERVAL,
+    CONF_TRIPS,
+    CONF_USE_STREAM,
+    CONF_VEHICLES,
+    DEFAULT_PLATFORM_EVENTS,
+    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_TRIPS,
+    DEFAULT_USE_STREAM,
+    DOMAIN,
+)
 from .parser import VehicleState
 
 
@@ -137,19 +152,29 @@ class FmTrackConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class FmTrackOptionsFlow(OptionsFlow):
-    """Options: toggle the live stream."""
+    """Options: poll interval, live stream, trips and platform events."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         if user_input is not None:
+            user_input[CONF_SCAN_INTERVAL] = int(user_input[CONF_SCAN_INTERVAL])
             return self.async_create_entry(data=user_input)
+        opts = self.config_entry.options
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_USE_STREAM,
-                        default=self.config_entry.options.get(CONF_USE_STREAM, DEFAULT_USE_STREAM),
-                    ): bool
+                        CONF_SCAN_INTERVAL, default=opts.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1, max=60, step=1, unit_of_measurement="min", mode=NumberSelectorMode.BOX
+                        )
+                    ),
+                    vol.Required(CONF_USE_STREAM, default=opts.get(CONF_USE_STREAM, DEFAULT_USE_STREAM)): bool,
+                    vol.Required(CONF_TRIPS, default=opts.get(CONF_TRIPS, DEFAULT_TRIPS)): bool,
+                    vol.Required(
+                        CONF_PLATFORM_EVENTS, default=opts.get(CONF_PLATFORM_EVENTS, DEFAULT_PLATFORM_EVENTS)
+                    ): bool,
                 }
             ),
         )

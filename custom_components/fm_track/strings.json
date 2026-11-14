@@ -11,7 +11,7 @@
       },
       "vehicles": {
         "title": "Vehicles",
-        "description": "Choose which vehicles to add to Home Assistant.",
+        "description": "Choose which vehicles and assets to add.",
         "data": {
           "vehicles": "Vehicles"
         }
@@ -37,8 +37,15 @@
   "options": {
     "step": {
       "init": {
+        "title": "FM-Track options",
         "data": {
-          "use_stream": "Use live stream (real-time updates)"
+          "scan_interval": "Poll interval",
+          "use_stream": "Live stream (real-time updates)",
+          "trips": "Trips (last trip, distance today)",
+          "platform_events": "Platform events (alarms from FM-Track)"
+        },
+        "data_description": {
+          "scan_interval": "How often to poll positions, full records and trips. The live stream delivers changes in between."
         }
       }
     }
@@ -51,6 +58,12 @@
       "moving": {
         "name": "Moving"
       },
+      "external_power": {
+        "name": "External power"
+      },
+      "charging": {
+        "name": "Charging"
+      },
       "lock": {
         "name": "Door lock"
       },
@@ -60,17 +73,59 @@
       "passenger_door": {
         "name": "Passenger door"
       },
+      "rear_left_door": {
+        "name": "Rear left door"
+      },
+      "rear_right_door": {
+        "name": "Rear right door"
+      },
       "trunk": {
         "name": "Trunk"
       },
       "hood": {
         "name": "Hood"
       },
-      "charging": {
-        "name": "Charging"
+      "parking_brake": {
+        "name": "Parking brake"
+      },
+      "cruise_control": {
+        "name": "Cruise control"
+      },
+      "brake_pedal": {
+        "name": "Brake pedal"
+      },
+      "clutch_pedal": {
+        "name": "Clutch pedal"
+      },
+      "panic": {
+        "name": "Panic button"
+      },
+      "rollover": {
+        "name": "Rollover"
       },
       "jamming": {
         "name": "GSM jamming"
+      },
+      "gprs": {
+        "name": "Mobile data"
+      },
+      "gnss_antenna": {
+        "name": "GPS antenna"
+      },
+      "digital_input_n": {
+        "name": "Digital input {index}"
+      },
+      "ot_digital_input_n": {
+        "name": "OT digital input {index}"
+      },
+      "output_n": {
+        "name": "Output {index}"
+      },
+      "tire_problem": {
+        "name": "Tyre {index} problem"
+      },
+      "live_stream": {
+        "name": "Live stream"
       }
     },
     "sensor": {
@@ -86,8 +141,17 @@
       "satellites": {
         "name": "Satellites"
       },
+      "hdop": {
+        "name": "GPS precision (HDOP)"
+      },
       "last_update": {
         "name": "Last update"
+      },
+      "geozone": {
+        "name": "Geozone",
+        "state": {
+          "none": "Outside geozones"
+        }
       },
       "trip_type": {
         "name": "Trip type",
@@ -96,11 +160,41 @@
           "none": "None",
           "private": "Private",
           "business": "Business",
-          "work": "Work"
+          "work": "Commute"
         }
       },
       "odometer": {
         "name": "Odometer"
+      },
+      "ev_battery": {
+        "name": "Battery"
+      },
+      "ev_range": {
+        "name": "Range"
+      },
+      "electric_motor_temperature": {
+        "name": "Electric motor temperature"
+      },
+      "dxp_battery": {
+        "name": "Traction battery"
+      },
+      "dxp_battery_voltage": {
+        "name": "Traction battery voltage"
+      },
+      "dxp_battery_temperature": {
+        "name": "Traction battery temperature"
+      },
+      "supply_voltage": {
+        "name": "Supply voltage"
+      },
+      "tracker_battery": {
+        "name": "Tracker battery"
+      },
+      "tracker_battery_voltage": {
+        "name": "Tracker battery voltage"
+      },
+      "tracker_battery_current": {
+        "name": "Tracker battery current"
       },
       "fuel_level": {
         "name": "Fuel level"
@@ -108,11 +202,14 @@
       "fuel_level_percent": {
         "name": "Fuel level (%)"
       },
-      "ev_battery": {
-        "name": "EV battery"
+      "fuel_used": {
+        "name": "Total fuel used"
       },
-      "ev_range": {
-        "name": "Range"
+      "fuel_rate": {
+        "name": "Fuel rate"
+      },
+      "fuel_economy": {
+        "name": "Fuel economy"
       },
       "rpm": {
         "name": "Engine speed"
@@ -120,17 +217,122 @@
       "coolant_temperature": {
         "name": "Coolant temperature"
       },
-      "ambient_temperature": {
-        "name": "Outside temperature"
-      },
       "engine_hours": {
         "name": "Engine hours"
+      },
+      "engine_load": {
+        "name": "Engine load"
+      },
+      "accelerator_pedal": {
+        "name": "Accelerator pedal"
+      },
+      "obd_dtc_count": {
+        "name": "Fault codes"
+      },
+      "distance_with_mil": {
+        "name": "Distance with check-engine light"
+      },
+      "ambient_temperature": {
+        "name": "Outside temperature"
       },
       "service_distance": {
         "name": "Distance to service"
       },
+      "service_hours": {
+        "name": "Hours to service"
+      },
+      "weight": {
+        "name": "Weight"
+      },
       "gsm_signal": {
         "name": "GSM signal"
+      },
+      "modem_temperature": {
+        "name": "Modem temperature"
+      },
+      "device_temperature": {
+        "name": "Tracker temperature"
+      },
+      "driver_id": {
+        "name": "Driver ID"
+      },
+      "last_trip_distance": {
+        "name": "Last trip distance"
+      },
+      "last_trip_duration": {
+        "name": "Last trip duration"
+      },
+      "last_trip_start": {
+        "name": "Last trip start"
+      },
+      "last_trip_end": {
+        "name": "Last trip end"
+      },
+      "last_trip_start_address": {
+        "name": "Last trip origin"
+      },
+      "last_trip_end_address": {
+        "name": "Last trip destination"
+      },
+      "last_trip_fuel": {
+        "name": "Last trip fuel"
+      },
+      "distance_today": {
+        "name": "Distance today"
+      },
+      "trips_today": {
+        "name": "Trips today"
+      },
+      "temperature": {
+        "name": "Temperature"
+      },
+      "temperature_n": {
+        "name": "Temperature sensor {index}"
+      },
+      "bt_temperature_n": {
+        "name": "Bluetooth temperature {index}"
+      },
+      "ot_temperature_n": {
+        "name": "OT temperature {index}"
+      },
+      "tk_temperature_n": {
+        "name": "Thermo King temperature {index}"
+      },
+      "humidity_n": {
+        "name": "Humidity {index}"
+      },
+      "axle_weight_n": {
+        "name": "Axle {index} weight"
+      },
+      "analog_input_n": {
+        "name": "Analog input {index}"
+      },
+      "frequency_input_n": {
+        "name": "Frequency input {index}"
+      },
+      "custom_input_n": {
+        "name": "Custom input {index}"
+      },
+      "tire_pressure": {
+        "name": "Tyre {index} pressure"
+      },
+      "tire_temperature": {
+        "name": "Tyre {index} temperature"
+      }
+    },
+    "event": {
+      "vehicle_event": {
+        "name": "Event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ignition_on": "Ignition on",
+              "ignition_off": "Ignition off",
+              "trip_ended": "Trip ended",
+              "platform_event": "Platform event"
+            }
+          }
+        }
       }
     }
   }

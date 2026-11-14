@@ -1,0 +1,27 @@
+{
+  "object_id": "abc123",
+  "datetime": "2025-05-01T13:02:00.000Z",
+  "ignition_status": "OFF",
+  "trip_type": "PRIVATE",
+  "position": {"altitude": 30, "direction": 166, "latitude": 50.311658, "longitude": 14.607314, "satellites_count": 13, "speed": 0},
+  "geozone_ids": ["0d5d7bc2"],
+  "inputs": {
+    "other": {"virtual_gps_odometer": 741.33, "country_code_geonames": 227},
+    "calculated_inputs": {"fuel_level": 0.00, "mileage": 15234.5, "custom_input_1": 0.00, "temperature": 0.00},
+    "device_inputs": {
+      "canbus_battery_power": 78,
+      "canbus_distance_until_recharge": 312,
+      "canbus_battery_charging": "NO_CHARGING",
+      "can_door_lock_state": "LOCKED",
+      "power_supply_voltage": 12.6,
+      "battery_voltage": 4.05,
+      "movement": "STILL",
+      "digital_input_1": false,
+      "hdop": "0.9",
+      "mobileye_wipers_available": true
+    },
+    "tires": {
+      "tire01": {"tire_status": "0", "tire_pressure": "250", "tire_temperature": "21.5"}
+    }
+  }
+}

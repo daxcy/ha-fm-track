@@ -11,7 +11,7 @@
       },
       "vehicles": {
         "title": "Voertuigen",
-        "description": "Kies welke voertuigen je in Home Assistant wilt.",
+        "description": "Kies welke voertuigen en assets je wilt toevoegen.",
         "data": {
           "vehicles": "Voertuigen"
         }
@@ -37,8 +37,15 @@
   "options": {
     "step": {
       "init": {
+        "title": "FM-Track-opties",
         "data": {
-          "use_stream": "Live stream gebruiken (realtime updates)"
+          "scan_interval": "Poll-interval",
+          "use_stream": "Live stream (realtime updates)",
+          "trips": "Ritten (laatste rit, km vandaag)",
+          "platform_events": "Platform-events (meldingen uit FM-Track)"
+        },
+        "data_description": {
+          "scan_interval": "Hoe vaak posities, volledige records en ritten worden opgehaald. De live stream levert wijzigingen tussendoor."
         }
       }
     }
@@ -51,6 +58,12 @@
       "moving": {
         "name": "Rijdt"
       },
+      "external_power": {
+        "name": "Externe voeding"
+      },
+      "charging": {
+        "name": "Laden"
+      },
       "lock": {
         "name": "Deurslot"
       },
@@ -60,17 +73,59 @@
       "passenger_door": {
         "name": "Passagiersdeur"
       },
+      "rear_left_door": {
+        "name": "Achterdeur links"
+      },
+      "rear_right_door": {
+        "name": "Achterdeur rechts"
+      },
       "trunk": {
         "name": "Kofferbak"
       },
       "hood": {
         "name": "Motorkap"
       },
-      "charging": {
-        "name": "Laden"
+      "parking_brake": {
+        "name": "Handrem"
+      },
+      "cruise_control": {
+        "name": "Cruisecontrol"
+      },
+      "brake_pedal": {
+        "name": "Rempedaal"
+      },
+      "clutch_pedal": {
+        "name": "Koppelingspedaal"
+      },
+      "panic": {
+        "name": "Paniekknop"
+      },
+      "rollover": {
+        "name": "Kanteling"
       },
       "jamming": {
-        "name": "GSM-storing (jamming)"
+        "name": "GSM-stoorzender"
+      },
+      "gprs": {
+        "name": "Mobiele data"
+      },
+      "gnss_antenna": {
+        "name": "GPS-antenne"
+      },
+      "digital_input_n": {
+        "name": "Digitale ingang {index}"
+      },
+      "ot_digital_input_n": {
+        "name": "OT digitale ingang {index}"
+      },
+      "output_n": {
+        "name": "Uitgang {index}"
+      },
+      "tire_problem": {
+        "name": "Band {index} probleem"
+      },
+      "live_stream": {
+        "name": "Live stream"
       }
     },
     "sensor": {
@@ -86,8 +141,17 @@
       "satellites": {
         "name": "Satellieten"
       },
+      "hdop": {
+        "name": "GPS-precisie (HDOP)"
+      },
       "last_update": {
         "name": "Laatste update"
+      },
+      "geozone": {
+        "name": "Geozone",
+        "state": {
+          "none": "Buiten geozones"
+        }
       },
       "trip_type": {
         "name": "Ritsoort",
@@ -102,17 +166,50 @@
       "odometer": {
         "name": "Kilometerstand"
       },
+      "ev_battery": {
+        "name": "Accu"
+      },
+      "ev_range": {
+        "name": "Actieradius"
+      },
+      "electric_motor_temperature": {
+        "name": "Temperatuur elektromotor"
+      },
+      "dxp_battery": {
+        "name": "Tractieaccu"
+      },
+      "dxp_battery_voltage": {
+        "name": "Spanning tractieaccu"
+      },
+      "dxp_battery_temperature": {
+        "name": "Temperatuur tractieaccu"
+      },
+      "supply_voltage": {
+        "name": "Voedingsspanning"
+      },
+      "tracker_battery": {
+        "name": "Batterij tracker"
+      },
+      "tracker_battery_voltage": {
+        "name": "Spanning batterij tracker"
+      },
+      "tracker_battery_current": {
+        "name": "Laadstroom batterij tracker"
+      },
       "fuel_level": {
         "name": "Brandstof"
       },
       "fuel_level_percent": {
         "name": "Brandstof (%)"
       },
-      "ev_battery": {
-        "name": "Accu (EV)"
+      "fuel_used": {
+        "name": "Totaal brandstofverbruik"
       },
-      "ev_range": {
-        "name": "Actieradius"
+      "fuel_rate": {
+        "name": "Actueel verbruik"
+      },
+      "fuel_economy": {
+        "name": "Zuinigheid"
       },
       "rpm": {
         "name": "Toerental"
@@ -120,17 +217,122 @@
       "coolant_temperature": {
         "name": "Koelvloeistoftemperatuur"
       },
-      "ambient_temperature": {
-        "name": "Buitentemperatuur"
-      },
       "engine_hours": {
         "name": "Motoruren"
+      },
+      "engine_load": {
+        "name": "Motorbelasting"
+      },
+      "accelerator_pedal": {
+        "name": "Gaspedaal"
+      },
+      "obd_dtc_count": {
+        "name": "Foutcodes"
+      },
+      "distance_with_mil": {
+        "name": "Afstand met storingslampje"
+      },
+      "ambient_temperature": {
+        "name": "Buitentemperatuur"
       },
       "service_distance": {
         "name": "Afstand tot onderhoud"
       },
+      "service_hours": {
+        "name": "Uren tot onderhoud"
+      },
+      "weight": {
+        "name": "Gewicht"
+      },
       "gsm_signal": {
         "name": "GSM-signaal"
+      },
+      "modem_temperature": {
+        "name": "Modemtemperatuur"
+      },
+      "device_temperature": {
+        "name": "Temperatuur tracker"
+      },
+      "driver_id": {
+        "name": "Bestuurder-ID"
+      },
+      "last_trip_distance": {
+        "name": "Laatste rit afstand"
+      },
+      "last_trip_duration": {
+        "name": "Laatste rit duur"
+      },
+      "last_trip_start": {
+        "name": "Laatste rit start"
+      },
+      "last_trip_end": {
+        "name": "Laatste rit einde"
+      },
+      "last_trip_start_address": {
+        "name": "Laatste rit vertrekadres"
+      },
+      "last_trip_end_address": {
+        "name": "Laatste rit bestemming"
+      },
+      "last_trip_fuel": {
+        "name": "Laatste rit brandstof"
+      },
+      "distance_today": {
+        "name": "Afstand vandaag"
+      },
+      "trips_today": {
+        "name": "Ritten vandaag"
+      },
+      "temperature": {
+        "name": "Temperatuur"
+      },
+      "temperature_n": {
+        "name": "Temperatuursensor {index}"
+      },
+      "bt_temperature_n": {
+        "name": "Bluetooth-temperatuur {index}"
+      },
+      "ot_temperature_n": {
+        "name": "OT-temperatuur {index}"
+      },
+      "tk_temperature_n": {
+        "name": "Thermo King-temperatuur {index}"
+      },
+      "humidity_n": {
+        "name": "Luchtvochtigheid {index}"
+      },
+      "axle_weight_n": {
+        "name": "Asgewicht {index}"
+      },
+      "analog_input_n": {
+        "name": "Analoge ingang {index}"
+      },
+      "frequency_input_n": {
+        "name": "Frequentie-ingang {index}"
+      },
+      "custom_input_n": {
+        "name": "Eigen invoer {index}"
+      },
+      "tire_pressure": {
+        "name": "Band {index} druk"
+      },
+      "tire_temperature": {
+        "name": "Band {index} temperatuur"
+      }
+    },
+    "event": {
+      "vehicle_event": {
+        "name": "Gebeurtenis",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ignition_on": "Contact aan",
+              "ignition_off": "Contact uit",
+              "trip_ended": "Rit beëindigd",
+              "platform_event": "Platform-melding"
+            }
+          }
+        }
       }
     }
   }

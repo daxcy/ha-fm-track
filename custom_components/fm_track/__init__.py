@@ -4,15 +4,18 @@ from __future__ import annotations
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import DEFAULT_BASE_URL, FmTrackApi
 from .const import CONF_BASE_URL
 from .coordinator import FmTrackConfigEntry, FmTrackCoordinator
+from .entity import account_device_info
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
+    Platform.EVENT,
     Platform.SENSOR,
 ]
 
@@ -25,6 +28,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FmTrackConfigEntry) -> b
         entry.data.get(CONF_BASE_URL, DEFAULT_BASE_URL),
     )
     coordinator = FmTrackCoordinator(hass, entry, api)
+    # The account device must exist before vehicles reference it (via_device).
+    dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id, **account_device_info(coordinator))
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
