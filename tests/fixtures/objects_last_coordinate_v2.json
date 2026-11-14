@@ -1,0 +1,23 @@
+{
+  "results": [
+    {
+      "id": "9db8ce84-85ef-11e9-89b6-b33c5b120f33",
+      "name": "AAAAAAAA",
+      "imei": 999955557777,
+      "vehicle_params": {"model": "R1250", "make": "BMW", "vin": null, "plate_number": null,
+        "average_fuel_consumption": null, "fuel_tank_capacity": null, "fuel_type": "DIESEL"},
+      "last_coordinate": {"satellites_count": 13, "altitude": 30, "speed": 104, "direction": 166,
+        "latitude": 50.311658, "longitude": 14.607314, "datetime": "2025-05-01T13:02:00.000Z",
+        "last_valid_gps_datetime": "2022-09-01T13:02:00.000Z", "server_datetime": "2022-09-02T09:25:55.980Z"}
+    },
+    {
+      "id": "7bf8990c-dba6-11e9-bdfc-1ff21de66015",
+      "name": "AAA333",
+      "imei": 490154203237001,
+      "vehicle_params": {"model": "", "make": "", "vin": null, "plate_number": null,
+        "average_fuel_consumption": 0.00, "fuel_tank_capacity": null, "fuel_type": "DIESEL"},
+      "last_coordinate": null
+    }
+  ],
+  "continuation_token": "12300000-0000-0000-0000-000008823234"
+}

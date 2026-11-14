@@ -1,0 +1,137 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FM-Track",
+        "description": "Vul de API-sleutel van je FM-Track-platform in. Wijzig de basis-URL alleen als je provider een eigen domein gebruikt.",
+        "data": {
+          "api_key": "API-sleutel",
+          "base_url": "Basis-URL"
+        }
+      },
+      "vehicles": {
+        "title": "Voertuigen",
+        "description": "Kies welke voertuigen je in Home Assistant wilt.",
+        "data": {
+          "vehicles": "Voertuigen"
+        }
+      },
+      "reauth_confirm": {
+        "title": "API-sleutel opnieuw invoeren",
+        "description": "De API-sleutel wordt niet meer geaccepteerd.",
+        "data": {
+          "api_key": "API-sleutel"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "De API-sleutel is geweigerd.",
+      "cannot_connect": "Kan de FM-Track-API niet bereiken.",
+      "no_vehicles": "Geen voertuigen gevonden voor deze API-sleutel."
+    },
+    "abort": {
+      "already_configured": "Deze API-sleutel is al ingesteld.",
+      "reauth_successful": "API-sleutel bijgewerkt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_stream": "Live stream gebruiken (realtime updates)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ignition": {
+        "name": "Contact"
+      },
+      "moving": {
+        "name": "Rijdt"
+      },
+      "lock": {
+        "name": "Deurslot"
+      },
+      "driver_door": {
+        "name": "Bestuurdersdeur"
+      },
+      "passenger_door": {
+        "name": "Passagiersdeur"
+      },
+      "trunk": {
+        "name": "Kofferbak"
+      },
+      "hood": {
+        "name": "Motorkap"
+      },
+      "charging": {
+        "name": "Laden"
+      },
+      "jamming": {
+        "name": "GSM-storing (jamming)"
+      }
+    },
+    "sensor": {
+      "speed": {
+        "name": "Snelheid"
+      },
+      "heading": {
+        "name": "Richting"
+      },
+      "altitude": {
+        "name": "Hoogte"
+      },
+      "satellites": {
+        "name": "Satellieten"
+      },
+      "last_update": {
+        "name": "Laatste update"
+      },
+      "trip_type": {
+        "name": "Ritsoort",
+        "state": {
+          "unknown": "Onbekend",
+          "none": "Geen",
+          "private": "Privé",
+          "business": "Zakelijk",
+          "work": "Woon-werk"
+        }
+      },
+      "odometer": {
+        "name": "Kilometerstand"
+      },
+      "fuel_level": {
+        "name": "Brandstof"
+      },
+      "fuel_level_percent": {
+        "name": "Brandstof (%)"
+      },
+      "ev_battery": {
+        "name": "Accu (EV)"
+      },
+      "ev_range": {
+        "name": "Actieradius"
+      },
+      "rpm": {
+        "name": "Toerental"
+      },
+      "coolant_temperature": {
+        "name": "Koelvloeistoftemperatuur"
+      },
+      "ambient_temperature": {
+        "name": "Buitentemperatuur"
+      },
+      "engine_hours": {
+        "name": "Motoruren"
+      },
+      "service_distance": {
+        "name": "Afstand tot onderhoud"
+      },
+      "gsm_signal": {
+        "name": "GSM-signaal"
+      }
+    }
+  }
+}

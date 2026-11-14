@@ -1,0 +1,137 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FM-Track",
+        "description": "Enter the API key from your FM-Track platform. Only change the base URL if your provider uses its own domain.",
+        "data": {
+          "api_key": "API key",
+          "base_url": "Base URL"
+        }
+      },
+      "vehicles": {
+        "title": "Vehicles",
+        "description": "Choose which vehicles to add to Home Assistant.",
+        "data": {
+          "vehicles": "Vehicles"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Re-enter API key",
+        "description": "The API key is no longer accepted.",
+        "data": {
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "The API key was rejected.",
+      "cannot_connect": "Could not reach the FM-Track API.",
+      "no_vehicles": "No vehicles found for this API key."
+    },
+    "abort": {
+      "already_configured": "This API key is already configured.",
+      "reauth_successful": "API key updated."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "use_stream": "Use live stream (real-time updates)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ignition": {
+        "name": "Ignition"
+      },
+      "moving": {
+        "name": "Moving"
+      },
+      "lock": {
+        "name": "Door lock"
+      },
+      "driver_door": {
+        "name": "Driver door"
+      },
+      "passenger_door": {
+        "name": "Passenger door"
+      },
+      "trunk": {
+        "name": "Trunk"
+      },
+      "hood": {
+        "name": "Hood"
+      },
+      "charging": {
+        "name": "Charging"
+      },
+      "jamming": {
+        "name": "GSM jamming"
+      }
+    },
+    "sensor": {
+      "speed": {
+        "name": "Speed"
+      },
+      "heading": {
+        "name": "Heading"
+      },
+      "altitude": {
+        "name": "Altitude"
+      },
+      "satellites": {
+        "name": "Satellites"
+      },
+      "last_update": {
+        "name": "Last update"
+      },
+      "trip_type": {
+        "name": "Trip type",
+        "state": {
+          "unknown": "Unknown",
+          "none": "None",
+          "private": "Private",
+          "business": "Business",
+          "work": "Work"
+        }
+      },
+      "odometer": {
+        "name": "Odometer"
+      },
+      "fuel_level": {
+        "name": "Fuel level"
+      },
+      "fuel_level_percent": {
+        "name": "Fuel level (%)"
+      },
+      "ev_battery": {
+        "name": "EV battery"
+      },
+      "ev_range": {
+        "name": "Range"
+      },
+      "rpm": {
+        "name": "Engine speed"
+      },
+      "coolant_temperature": {
+        "name": "Coolant temperature"
+      },
+      "ambient_temperature": {
+        "name": "Outside temperature"
+      },
+      "engine_hours": {
+        "name": "Engine hours"
+      },
+      "service_distance": {
+        "name": "Distance to service"
+      },
+      "gsm_signal": {
+        "name": "GSM signal"
+      }
+    }
+  }
+}

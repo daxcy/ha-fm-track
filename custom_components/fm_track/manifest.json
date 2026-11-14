@@ -1,0 +1,14 @@
+{
+  "domain": "fm_track",
+  "name": "FM-Track",
+  "codeowners": [
+    "@daxcy"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/daxcy/ha-fm-track",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "issue_tracker": "https://github.com/daxcy/ha-fm-track/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
