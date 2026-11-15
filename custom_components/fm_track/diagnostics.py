@@ -107,6 +107,15 @@ async def _input_inventory(c, object_id: str) -> dict[str, Any]:
     }
 
 
+def _redact_scan(probe: dict[str, Any]) -> dict[str, Any]:
+    """The v1 scan uses dotted field paths; redact on the last path segment."""
+    fields = probe.get("coordinates_v1_scan", {}).get("fields", {})
+    for path, entry in fields.items():
+        if path.rsplit(".", 1)[-1] in TO_REDACT:
+            entry["last"] = "**REDACTED**"
+    return probe
+
+
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: FmTrackConfigEntry) -> dict[str, Any]:
     c = entry.runtime_data
     vehicles: dict[str, Any] = {}
@@ -129,7 +138,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: FmTrack
             "raw_record": c.raw_record.get(oid),
             "raw_stream": c.raw_stream.get(oid),
             "input_inventory": await _input_inventory(c, oid),
-            "api_probe": await c.api.async_probe(oid, dt_util.utcnow() - INVENTORY_WINDOW),
+            "api_probe": _redact_scan(await c.api.async_probe(oid, dt_util.utcnow() - INVENTORY_WINDOW)),
         }
     return async_redact_data(
         {
