@@ -85,6 +85,21 @@
       "hood": {
         "name": "Motorkap"
       },
+      "window_front_left": {
+        "name": "Raam linksvoor"
+      },
+      "window_front_right": {
+        "name": "Raam rechtsvoor"
+      },
+      "window_rear_left": {
+        "name": "Raam linksachter"
+      },
+      "window_rear_right": {
+        "name": "Raam rechtsachter"
+      },
+      "sunroof": {
+        "name": "Schuifdak"
+      },
       "parking_brake": {
         "name": "Handrem"
       },

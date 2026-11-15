@@ -46,7 +46,6 @@ class FmTrackEntity(CoordinatorEntity[FmTrackCoordinator]):
             manufacturer=(state.make if state else None) or None,
             model=model,
             serial_number=(state.vin if state else None) or None,
-            via_device=(DOMAIN, coordinator.config_entry.entry_id),
         )
 
     @property

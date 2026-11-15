@@ -85,6 +85,21 @@
       "hood": {
         "name": "Hood"
       },
+      "window_front_left": {
+        "name": "Front left window"
+      },
+      "window_front_right": {
+        "name": "Front right window"
+      },
+      "window_rear_left": {
+        "name": "Rear left window"
+      },
+      "window_rear_right": {
+        "name": "Rear right window"
+      },
+      "sunroof": {
+        "name": "Sunroof"
+      },
       "parking_brake": {
         "name": "Parking brake"
       },

@@ -85,7 +85,7 @@ class VehicleState:
     def is_electric(self) -> bool:
         if self.fuel_type and self.fuel_type.upper() in ELECTRIC_FUEL_TYPES:
             return True
-        return "canbus_battery_power" in self.active or "canbus_distance_until_recharge" in self.active
+        return bool({"canbus_battery_power", "canbus_distance_until_recharge", "state_of_charge"} & self.active)
 
     def get(self, key: str) -> Any:
         """Value of an input, or None when it was never really reported."""
@@ -140,6 +140,16 @@ class VehicleState:
         return True
 
 
+def _not_available(key: str, value: Any) -> bool:
+    """Sentinel values devices send for "not available" (e.g. -272.66 °C)."""
+    if isinstance(value, str) and value.upper() in ("NOT_AVAILABLE", "UNKNOWN"):
+        return True
+    if "temp" in key:
+        num = to_float(value)
+        return num is not None and (num < -60 or num > 250)
+    return False
+
+
 def _flatten_inputs(state: VehicleState, block: dict[str, Any]) -> None:
     for container in VALUE_CONTAINERS:
         values = block.get(container)
@@ -150,6 +160,8 @@ def _flatten_inputs(state: VehicleState, block: dict[str, Any]) -> None:
             if value is None or isinstance(value, (dict, list)):
                 continue
             state.values[key] = value
+            if _not_available(key, value):
+                continue
             if container != CALCULATED or (to_float(value) or 0) != 0:
                 state.active.add(key)
     tires = block.get("tires")
@@ -250,6 +262,11 @@ class Trip:
         return f"{self.object_id}:{self.start.isoformat() if self.start else '?'}"
 
 
+def _metres_to_km(value: Any) -> float | None:
+    metres = to_float(value)
+    return None if metres is None else round(metres / 1000, 2)
+
+
 def parse_trip(data: dict[str, Any]) -> Trip | None:
     if not isinstance(data, dict):
         return None
@@ -264,7 +281,8 @@ def parse_trip(data: dict[str, Any]) -> Trip | None:
         object_id=str(data.get("object_id") or ""),
         start=start_dt,
         end=end_dt,
-        distance=to_float(data.get("mileage")),
+        # The Trips API reports the trip distance in metres.
+        distance=_metres_to_km(data.get("mileage")),
         duration=int(duration) if duration is not None else None,
         fuel=to_float(data.get("total_fuel_consumption")),
         trip_type=data.get("trip_type"),

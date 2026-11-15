@@ -96,8 +96,8 @@ def _tracker_battery(_: FmTrackCoordinator, s: VehicleState) -> int | None:
 
 
 def _geozone(c: FmTrackCoordinator, s: VehicleState) -> str | None:
-    if s.geozone_ids is None:
-        return None
+    if s.geozone_ids is None or not c.geozones:
+        return None  # no geozones defined in the account
     if not s.geozone_ids:
         return "none"
     names = [c.geozones.get(g, g) for g in s.geozone_ids]
@@ -231,6 +231,7 @@ SENSORS: list[FmTrackSensorDescription] = [
     _input(
         "ev_battery",
         "canbus_battery_power",
+        "state_of_charge",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=_M,
@@ -657,6 +658,10 @@ class FmTrackSensor(FmTrackEntity, SensorEntity):
     def __init__(self, coordinator: FmTrackCoordinator, object_id: str, desc: FmTrackSensorDescription) -> None:
         super().__init__(coordinator, object_id, desc.key, desc.placeholders)
         self.entity_description = desc
+        state = self.vehicle
+        if desc.key == "tracker_battery" and state and (to_float(state.get("power_supply_voltage")) or 0) > 5:
+            # Backup battery of a tracker that runs on vehicle power: diagnostic only.
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> Any:

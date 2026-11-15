@@ -135,6 +135,30 @@ class FmTrackApi:
             return items[-1] if items else None
         return data if isinstance(data, dict) else None
 
+    async def async_get_records(self, object_id: str, since: datetime, max_pages: int = 5) -> list[dict[str, Any]]:
+        """All history records in [since, now] (bounded by max_pages)."""
+        records: list[dict[str, Any]] = []
+        token: str | None = None
+        for _ in range(max_pages):
+            data = await self._get_json(
+                f"/objects/{quote(object_id, safe='')}/coordinates",
+                self._params(
+                    2,
+                    from_datetime=iso(since),
+                    to_datetime=iso(datetime.now(timezone.utc)),
+                    limit=_PAGE_LIMIT,
+                    continuation_token=token,
+                ),
+            )
+            if not isinstance(data, dict):
+                break
+            records.extend(i for i in data.get("items") or [] if isinstance(i, dict))
+            new_token = data.get("continuation_token")
+            if not new_token or new_token == token:
+                break
+            token = new_token
+        return records
+
     async def async_get_latest_record(self, object_id: str, since: datetime) -> dict[str, Any] | None:
         """Most recent history record in [since, now]; fallback when the exact lookup fails."""
         latest: dict[str, Any] | None = None

@@ -28,12 +28,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: FmTrackConfigEntry) -> b
         entry.data.get(CONF_BASE_URL, DEFAULT_BASE_URL),
     )
     coordinator = FmTrackCoordinator(hass, entry, api)
-    # The account device must exist before vehicles reference it (via_device).
-    dr.async_get(hass).async_get_or_create(config_entry_id=entry.entry_id, **account_device_info(coordinator))
+    registry = dr.async_get(hass)
+    account = registry.async_get_or_create(config_entry_id=entry.entry_id, **account_device_info(coordinator))
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Show vehicles "via" the account device.
+    for device in dr.async_entries_for_config_entry(registry, entry.entry_id):
+        if device.id != account.id and device.via_device_id != account.id:
+            registry.async_update_device(device.id, via_device_id=account.id)
     coordinator.async_start_stream()
     entry.async_on_unload(entry.add_update_listener(_async_reload))
     return True

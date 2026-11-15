@@ -37,7 +37,7 @@ def _trips() -> dict:
         "trips": [
             {
                 "object_id": "abc123",
-                "mileage": 12.4,
+                "mileage": 12400,
                 "trip_duration": 1260,
                 "trip_type": "PRIVATE",
                 "trip_start": {"datetime": fmt(start), "address": {"locality": "Eindhoven"}},
@@ -50,6 +50,7 @@ def _trips() -> dict:
 def _mock_api(aioclient_mock: AiohttpClientMocker) -> None:
     aioclient_mock.get(f"{BASE}/objects-last-coordinate", json=_last_coordinate())
     aioclient_mock.get(re.compile(r".*/objects/abc123/coordinates/.*"), json=_record())
+    aioclient_mock.get(re.compile(r".*/objects/abc123/coordinates(\?.*)?$"), json={"items": [_record()]})
     aioclient_mock.get(re.compile(r".*/objects/abc123/trips.*"), json=_trips())
     aioclient_mock.get(f"{BASE}/geozones", json={"items": [{"id": "0d5d7bc2", "name": "Thuis"}]})
     aioclient_mock.get(f"{BASE}/detected-events", json={"events": []})
@@ -107,4 +108,7 @@ async def test_diagnostics_redacts(hass: HomeAssistant, aioclient_mock: AiohttpC
     assert "50.311658" not in text and "999955557777" not in text
     vehicle = diag["vehicles"]["abc123"]
     assert "canbus_battery_power" in vehicle["active_inputs"]
+    inventory = vehicle["input_inventory"]
+    assert inventory["records"] == 1
+    assert inventory["inputs"]["device_inputs.canbus_battery_power"]["count"] == 1
     assert diag["features"]["stream"] is False or diag["features"]["stream"] is None

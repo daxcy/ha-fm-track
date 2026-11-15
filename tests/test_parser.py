@@ -72,7 +72,7 @@ def test_stream_payload_shapes():
 
 def test_trip_parsing():
     trip = parser.parse_trip({
-        "object_id": "abc123", "mileage": 12.4, "trip_duration": 1260, "trip_type": "PRIVATE",
+        "object_id": "abc123", "mileage": 12400, "trip_duration": 1260, "trip_type": "PRIVATE",
         "trip_start": {"datetime": "2025-05-01T12:00:00.000Z",
                        "address": {"street": "Dorpsstraat", "house_number": "1", "zip": "1234 AB",
                                    "locality": "Ergens", "country": "Nederland"}},
@@ -82,6 +82,21 @@ def test_trip_parsing():
     assert trip.start_address == "Dorpsstraat 1, 1234 AB Ergens, Nederland"
     assert trip.end_address == "Elders"
     assert parser.parse_trip({"mileage": 1}) is None
+
+
+def test_not_available_values_and_soc():
+    rec = parser.parse_object({
+        "object_id": "x", "datetime": "2026-11-15T07:35:29.000Z",
+        "inputs": {
+            "device_inputs": {"canbus_ambient_air_temperature": -272.66, "can_door_lock_state": "NOT_AVAILABLE",
+                              "gnss_antenna": "UNKNOWN", "pcb_temperature": 5},
+            "calculated_inputs": {"state_of_charge": 96, "fuel_level": 0},
+        },
+    })
+    assert rec.get("canbus_ambient_air_temperature") is None
+    assert rec.get("can_door_lock_state") is None and rec.get("gnss_antenna") is None
+    assert rec.get("pcb_temperature") == 5
+    assert rec.get("state_of_charge") == 96 and rec.is_electric
 
 
 def test_liion_estimate():

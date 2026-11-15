@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FmTrackConfigEntry, FmTrackCoordinator
 from .entity import FmTrackEntity
-from .parser import estimate_liion_percent, to_float
+from .parser import to_float
 
 
 async def async_setup_entry(
@@ -55,12 +55,6 @@ class FmTrackTracker(FmTrackEntity, TrackerEntity):
         # Rough horizontal accuracy from HDOP (≈ 5 m per HDOP unit).
         hdop = to_float(self.vehicle.get("hdop")) if self.vehicle else None
         return round(hdop * 5, 1) if hdop else 0
-
-    @property
-    def battery_level(self) -> int | None:
-        """Battery of the tracker itself (asset trackers), not the car's EV battery."""
-        v = self.vehicle
-        return estimate_liion_percent(v.get("battery_voltage")) if v else None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

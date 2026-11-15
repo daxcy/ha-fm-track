@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
+from .api import FmTrackError
 from .coordinator import FmTrackConfigEntry
 
 TO_REDACT = {
@@ -45,6 +48,37 @@ TO_REDACT = {
 }
 
 
+INVENTORY_WINDOW = timedelta(days=3)
+
+
+async def _input_inventory(c, object_id: str) -> dict[str, Any]:
+    """Every input seen in recent history: how often, and the last value.
+
+    Trackers do not send every input in every record (asset trackers often
+    report their battery only in heartbeat messages), so this shows what a
+    device can deliver beyond the latest record.
+    """
+    try:
+        records = await c.api.async_get_records(object_id, dt_util.utcnow() - INVENTORY_WINDOW)
+    except FmTrackError as err:
+        return {"error": str(err)}
+    seen: dict[str, dict[str, Any]] = {}
+    for record in records:
+        inputs = record.get("inputs") if isinstance(record.get("inputs"), dict) else {}
+        for container, values in inputs.items():
+            if not isinstance(values, dict):
+                continue
+            for key, value in values.items():
+                entry = seen.setdefault(f"{container}.{key}", {"count": 0})
+                entry["count"] += 1
+                entry["last"] = "**REDACTED**" if key in TO_REDACT else value
+    return {
+        "records": len(records),
+        "triggers": sorted({str(r.get("inputs", {}).get("device_inputs", {}).get("input_trigger")) for r in records}),
+        "inputs": dict(sorted(seen.items())),
+    }
+
+
 async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: FmTrackConfigEntry) -> dict[str, Any]:
     c = entry.runtime_data
     vehicles: dict[str, Any] = {}
@@ -65,6 +99,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: FmTrack
             "last_trip": vars(last_trip) if last_trip else None,
             "raw_last_coordinate": c.raw_last_coordinate.get(oid),
             "raw_record": c.raw_record.get(oid),
+            "input_inventory": await _input_inventory(c, oid),
         }
     return async_redact_data(
         {
