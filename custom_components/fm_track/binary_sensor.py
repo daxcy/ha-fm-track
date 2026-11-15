@@ -239,7 +239,8 @@ class FmTrackTireLeakSensor(FmTrackEntity, BinarySensorEntity):
     _attr_translation_key = "tire_problem"
 
     def __init__(self, coordinator: FmTrackCoordinator, object_id: str, tire: str) -> None:
-        index = "".join(ch for ch in tire if ch.isdigit()) or tire
+        digits = "".join(ch for ch in tire if ch.isdigit())
+        index = str(int(digits)) if digits else tire
         super().__init__(coordinator, object_id, f"{tire}_leak", {"index": index})
         self._tire = tire
 

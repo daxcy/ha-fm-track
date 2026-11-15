@@ -670,7 +670,8 @@ class FmTrackTireSensor(FmTrackEntity, SensorEntity):
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, coordinator, object_id, tire, value_key, suffix, device_class, unit) -> None:
-        index = "".join(ch for ch in tire if ch.isdigit()) or tire
+        digits = "".join(ch for ch in tire if ch.isdigit())
+        index = str(int(digits)) if digits else tire
         super().__init__(coordinator, object_id, f"{tire}_{suffix}", {"index": index})
         self._tire = tire
         self._value_key = value_key
