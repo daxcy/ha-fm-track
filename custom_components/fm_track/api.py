@@ -189,6 +189,39 @@ class FmTrackApi:
             token = new_token
         return latest
 
+    async def async_probe(self, object_id: str, since: datetime) -> dict[str, Any]:
+        """Raw responses of other API versions for one object (diagnostics only)."""
+        oid = quote(object_id, safe="")
+        now = iso(datetime.now(timezone.utc))
+        calls = {
+            "object_v1": (f"/objects/{oid}", self._params(1)),
+            "last_coordinate_v3": (
+                f"/objects-last-coordinate/{oid}",
+                self._params(3),
+            ),
+            "coordinates_v1": (
+                f"/objects/{oid}/coordinates",
+                self._params(1, fromDatetime=iso(since), toDatetime=now, limit=5),
+            ),
+            "coordinates_v3": (
+                f"/objects/{oid}/coordinates",
+                self._params(3, from_datetime=iso(since), to_datetime=now, limit=5),
+            ),
+        }
+        result: dict[str, Any] = {}
+        for name, (path, params) in calls.items():
+            try:
+                data = await self._get_json(path, params)
+            except FmTrackError as err:
+                result[name] = {"error": str(err)}
+                continue
+            if isinstance(data, dict):
+                for key in ("items", "coordinates", "results"):
+                    if isinstance(data.get(key), list):
+                        data = {**data, key: data[key][-2:]}
+            result[name] = data
+        return result
+
     # --- trips, events, geozones ----------------------------------------
 
     async def async_get_trips(self, object_id: str, since: datetime) -> list[Trip]:

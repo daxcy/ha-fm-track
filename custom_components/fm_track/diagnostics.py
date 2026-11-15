@@ -45,6 +45,13 @@ TO_REDACT = {
     "start_longitude",
     "end_latitude",
     "end_longitude",
+    "lat",
+    "lng",
+    "lon",
+    "iccid",
+    "phone_number",
+    "sim_number",
+    "email",
 }
 
 
@@ -120,6 +127,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: FmTrack
             "raw_last_coordinate": c.raw_last_coordinate.get(oid),
             "raw_record": c.raw_record.get(oid),
             "input_inventory": await _input_inventory(c, oid),
+            "api_probe": await c.api.async_probe(oid, dt_util.utcnow() - INVENTORY_WINDOW),
         }
     return async_redact_data(
         {

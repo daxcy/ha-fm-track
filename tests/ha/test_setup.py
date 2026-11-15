@@ -48,6 +48,8 @@ def _trips() -> dict:
 
 
 def _mock_api(aioclient_mock: AiohttpClientMocker) -> None:
+    aioclient_mock.get(re.compile(r".*/objects-last-coordinate/abc123.*"), status=403)
+    aioclient_mock.get(re.compile(r".*/objects/abc123(\?.*)?$"), json={"id": "abc123", "imei": "123"})
     aioclient_mock.get(f"{BASE}/objects-last-coordinate", json=_last_coordinate())
     aioclient_mock.get(re.compile(r".*/objects/abc123/coordinates/.*"), json=_record())
     aioclient_mock.get(re.compile(r".*/objects/abc123/coordinates(\?.*)?$"), json={"items": [_record()]})
@@ -103,6 +105,9 @@ async def test_setup_creates_entities(hass: HomeAssistant, aioclient_mock: Aioht
 async def test_diagnostics_redacts(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     entry = await _setup(hass, aioclient_mock)
     diag = await async_get_config_entry_diagnostics(hass, entry)
+    probe = diag["vehicles"]["abc123"]["api_probe"]
+    assert probe["last_coordinate_v3"] == {"error": "HTTP 403"}
+    assert probe["object_v1"]["imei"] == "**REDACTED**"
     text = json.dumps(diag, default=str)
     assert "secret" not in text
     assert "50.311658" not in text and "999955557777" not in text
