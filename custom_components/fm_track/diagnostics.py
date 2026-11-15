@@ -48,7 +48,7 @@ TO_REDACT = {
 }
 
 
-INVENTORY_WINDOW = timedelta(days=3)
+INVENTORY_WINDOW = timedelta(days=30)
 
 
 async def _input_inventory(c, object_id: str) -> dict[str, Any]:
@@ -59,21 +59,41 @@ async def _input_inventory(c, object_id: str) -> dict[str, Any]:
     device can deliver beyond the latest record.
     """
     try:
-        records = await c.api.async_get_records(object_id, dt_util.utcnow() - INVENTORY_WINDOW)
+        records = await c.api.async_get_records(object_id, dt_util.utcnow() - INVENTORY_WINDOW, max_pages=10)
     except FmTrackError as err:
         return {"error": str(err)}
     seen: dict[str, dict[str, Any]] = {}
+
+    def note(name: str, key: str, value: Any, when: Any) -> None:
+        entry = seen.setdefault(name, {"count": 0, "first_seen": when})
+        entry["count"] += 1
+        entry["last_seen"] = when
+        entry["last"] = "**REDACTED**" if key in TO_REDACT else value
+
     for record in records:
+        when = record.get("datetime")
+        for key, value in record.items():
+            if key in ("inputs", "position", "object_id", "datetime"):
+                continue
+            if isinstance(value, dict):
+                for sub, sub_value in value.items():
+                    note(f"record.{key}.{sub}", sub, sub_value, when)
+            else:
+                note(f"record.{key}", key, value, when)
         inputs = record.get("inputs") if isinstance(record.get("inputs"), dict) else {}
         for container, values in inputs.items():
             if not isinstance(values, dict):
+                note(f"inputs.{container}", container, values, when)
                 continue
             for key, value in values.items():
-                entry = seen.setdefault(f"{container}.{key}", {"count": 0})
-                entry["count"] += 1
-                entry["last"] = "**REDACTED**" if key in TO_REDACT else value
+                if container == "tires":
+                    continue
+                note(f"{container}.{key}", key, value, when)
     return {
+        "window_days": INVENTORY_WINDOW.days,
         "records": len(records),
+        "first_record": records[0].get("datetime") if records else None,
+        "last_record": records[-1].get("datetime") if records else None,
         "triggers": sorted({str(r.get("inputs", {}).get("device_inputs", {}).get("input_trigger")) for r in records}),
         "inputs": dict(sorted(seen.items())),
     }

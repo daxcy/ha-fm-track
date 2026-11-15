@@ -99,6 +99,18 @@ def test_not_available_values_and_soc():
     assert rec.get("state_of_charge") == 96 and rec.is_electric
 
 
+def test_backfill_keeps_last_known_value():
+    latest = parser.parse_object({"object_id": "a", "datetime": "2026-11-14T12:00:00.000Z",
+                                  "inputs": {"device_inputs": {"hdop": "1.3"}}})
+    old1 = parser.parse_object({"object_id": "a", "datetime": "2026-11-10T12:00:00.000Z",
+                                "inputs": {"device_inputs": {"battery_voltage": 3.9, "hdop": "2.0"}}})
+    old2 = parser.parse_object({"object_id": "a", "datetime": "2026-11-12T12:00:00.000Z",
+                                "inputs": {"device_inputs": {"battery_voltage": 3.8}}})
+    assert parser.backfill(latest, [old1, old2]) == 1
+    assert latest.get("battery_voltage") == 3.8  # newest of the older values
+    assert latest.get("hdop") == "1.3"  # latest record wins
+
+
 def test_liion_estimate():
     assert parser.estimate_liion_percent(4.25) == 100
     assert parser.estimate_liion_percent(4.05) == 85

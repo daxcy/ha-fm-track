@@ -140,6 +140,26 @@ class VehicleState:
         return True
 
 
+def backfill(state: VehicleState, older: list[VehicleState]) -> int:
+    """Fill inputs the latest record lacks with their last known value.
+
+    Devices do not send every input in every message; asset trackers for
+    example report their battery only in occasional heartbeats. `older`
+    must be sorted oldest first. Returns the number of inputs added.
+    """
+    found: dict[str, Any] = {}
+    for record in older:
+        for key in record.active:
+            found[key] = record.values[key]
+    added = 0
+    for key, value in found.items():
+        if key not in state.active:
+            state.values[key] = value
+            state.active.add(key)
+            added += 1
+    return added
+
+
 def _not_available(key: str, value: Any) -> bool:
     """Sentinel values devices send for "not available" (e.g. -272.66 °C)."""
     if isinstance(value, str) and value.upper() in ("NOT_AVAILABLE", "UNKNOWN"):

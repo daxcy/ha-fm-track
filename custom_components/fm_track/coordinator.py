@@ -37,13 +37,15 @@ from .const import (
     FEATURE_RECORDS,
     FEATURE_STREAM,
     FEATURE_TRIPS,
+    BACKFILL_MAX_PAGES,
+    BACKFILL_WINDOW,
     GEOZONE_REFRESH,
     RECORD_FALLBACK_WINDOW,
     STREAM_RETRY_MAX,
     STREAM_RETRY_MIN,
     TRIP_HISTORY,
 )
-from .parser import Trip, VehicleState, parse_object
+from .parser import Trip, VehicleState, backfill, parse_object
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +84,7 @@ class FmTrackCoordinator(DataUpdateCoordinator[dict[str, VehicleState]]):
         self.trips: dict[str, list[Trip]] = {}
         self._trips_for: dict[str, datetime | None] = {}
         self._events_since: dict[str, datetime] = {}
+        self._backfilled: set[str] = set()
         self.raw_last_coordinate: dict[str, dict[str, Any]] = {}
         self.raw_record: dict[str, dict[str, Any]] = {}
 
@@ -133,6 +136,7 @@ class FmTrackCoordinator(DataUpdateCoordinator[dict[str, VehicleState]]):
         await self._async_refresh_geozones()
         for state in current.values():
             await self._async_enrich(state)
+            await self._async_backfill(state)
             await self._async_refresh_trips(state)
             await self._async_check_platform_events(state)
         return current
@@ -185,6 +189,23 @@ class FmTrackCoordinator(DataUpdateCoordinator[dict[str, VehicleState]]):
                 for tire, values in record.tires.items():
                     state.tires.setdefault(tire, {}).update(values)
         state.inputs_datetime = state.datetime
+
+    async def _async_backfill(self, state: VehicleState) -> None:
+        """Once per vehicle: last known values of inputs that are sent only now and then."""
+        if state.object_id in self._backfilled or self.features[FEATURE_RECORDS] is False:
+            return
+        self._backfilled.add(state.object_id)
+        try:
+            raw = await self.api.async_get_records(
+                state.object_id, dt_util.utcnow() - BACKFILL_WINDOW, max_pages=BACKFILL_MAX_PAGES
+            )
+        except FmTrackError as err:
+            _LOGGER.debug("Backfill for %s failed: %s", state.object_id, err)
+            return
+        older = [r for item in raw if (r := parse_object(item)) is not None and r.has_inputs]
+        older.sort(key=lambda r: r.datetime or datetime.min.replace(tzinfo=timezone.utc))
+        if added := backfill(state, older):
+            _LOGGER.debug("Backfilled %s inputs for %s", added, state.object_id)
 
     async def _async_refresh_geozones(self) -> None:
         if self.features[FEATURE_GEOZONES] is False:
