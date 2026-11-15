@@ -127,6 +127,7 @@ async def async_get_config_entry_diagnostics(hass: HomeAssistant, entry: FmTrack
             "last_trip": vars(last_trip) if last_trip else None,
             "raw_last_coordinate": c.raw_last_coordinate.get(oid),
             "raw_record": c.raw_record.get(oid),
+            "raw_stream": c.raw_stream.get(oid),
             "input_inventory": await _input_inventory(c, oid),
             "api_probe": await c.api.async_probe(oid, dt_util.utcnow() - INVENTORY_WINDOW),
         }

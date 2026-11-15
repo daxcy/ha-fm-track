@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 from collections.abc import AsyncIterator, Callable
@@ -190,23 +191,46 @@ class FmTrackApi:
         return latest
 
     async def async_probe(self, object_id: str, since: datetime) -> dict[str, Any]:
-        """Raw responses of other API versions for one object (diagnostics only)."""
+        """Raw responses of every other object-related API (diagnostics only).
+
+        Used to find fields (such as an asset tracker's battery level) that
+        the v2 records do not carry. Lists are cut to their last items.
+        """
         oid = quote(object_id, safe="")
-        now = iso(datetime.now(timezone.utc))
-        calls = {
+        now_dt = datetime.now(timezone.utc)
+        now = iso(now_dt)
+        frm = iso(since)
+        calls: dict[str, tuple[str, dict[str, str]]] = {
             "object_v1": (f"/objects/{oid}", self._params(1)),
-            "last_coordinate_v3": (
-                f"/objects-last-coordinate/{oid}",
-                self._params(3),
-            ),
-            "coordinates_v1": (
-                f"/objects/{oid}/coordinates",
-                self._params(1, fromDatetime=iso(since), toDatetime=now, limit=5),
-            ),
+            "objects_list_v1": ("/objects", self._params(1)),
+            "last_coordinate_single_v2": (f"/objects-last-coordinate/{oid}", self._params(2)),
+            "last_coordinate_v3": (f"/objects-last-coordinate/{oid}", self._params(3)),
             "coordinates_v3": (
                 f"/objects/{oid}/coordinates",
-                self._params(3, from_datetime=iso(since), to_datetime=now, limit=5),
+                self._params(3, from_datetime=frm, to_datetime=now, limit=5),
             ),
+            "trips_v1": (
+                f"/objects/{oid}/trips",
+                self._params(1, from_datetime=frm, to_datetime=now, limit=1000),
+            ),
+            "detected_events_v1": (
+                "/detected-events",
+                self._params(1, object_id=object_id, from_datetime=frm, to_datetime=now, limit=1000),
+            ),
+            "fuel_events_v1": (
+                "/fuel-events",
+                self._params(1, object_id=object_id, from_datetime=frm, to_datetime=now, limit=1000),
+            ),
+            "ecodriving_object_v1": (
+                "/ecodriving/object",
+                self._params(1, id=object_id, from_datetime=frm, to_datetime=now),
+            ),
+            "countries_object_v1": (
+                "/countries/object",
+                self._params(1, id=object_id, from_datetime=frm, to_datetime=now),
+            ),
+            "events_v1": ("/events", self._params(1, limit=20)),
+            "object_groups_v1": ("/object-groups", self._params(1, limit=20)),
         }
         result: dict[str, Any] = {}
         for name, (path, params) in calls.items():
@@ -215,12 +239,72 @@ class FmTrackApi:
             except FmTrackError as err:
                 result[name] = {"error": str(err)}
                 continue
-            if isinstance(data, dict):
-                for key in ("items", "coordinates", "results"):
-                    if isinstance(data.get(key), list):
-                        data = {**data, key: data[key][-2:]}
-            result[name] = data
+            result[name] = _shrink(data, object_id)
+        result["coordinates_v1_scan"] = await self._scan_v1(oid, frm, now)
+        result["stream_v1_first"] = await self._first_stream_message(1, object_id)
+        result["stream_v2_first"] = await self._first_stream_message(2, object_id)
         return result
+
+    async def _scan_v1(self, oid: str, frm: str, now: str) -> dict[str, Any]:
+        """Every field of the v1 history that ever had a non-null value."""
+        seen: dict[str, dict[str, Any]] = {}
+        count = 0
+        token: Any = None
+        try:
+            for _ in range(10):
+                data = await self._get_json(
+                    f"/objects/{oid}/coordinates",
+                    self._params(1, fromDatetime=frm, toDatetime=now, limit=_PAGE_LIMIT, continuationToken=token),
+                )
+                if not isinstance(data, dict):
+                    break
+                for item in data.get("items") or []:
+                    if not isinstance(item, dict):
+                        continue
+                    count += 1
+                    for path, value in _walk(item):
+                        if value is None:
+                            continue
+                        entry = seen.setdefault(path, {"count": 0, "first_seen": item.get("datetime")})
+                        entry["count"] += 1
+                        entry["last_seen"] = item.get("datetime")
+                        entry["last"] = value
+                new_token = data.get("continuation_token") or data.get("continuationToken")
+                if not new_token or new_token == token:
+                    break
+                token = new_token
+        except FmTrackError as err:
+            return {"error": str(err), "records": count}
+        return {"records": count, "fields": dict(sorted(seen.items()))}
+
+    async def _first_stream_message(self, version: int, object_id: str) -> Any:
+        """Connect to a stream version and return the first record (or a timeout note)."""
+        try:
+            async with asyncio.timeout(20):
+                async with self._session.get(
+                    f"{self._base_url}/object-coordinates-stream",
+                    params=self._params(version, object_id=object_id),
+                    headers={"Accept": "text/event-stream"},
+                    timeout=aiohttp.ClientTimeout(total=None, sock_connect=15, sock_read=None),
+                ) as resp:
+                    self._check_status(resp.status)
+                    lines: list[str] = []
+                    async for raw_line in resp.content:
+                        line = raw_line.decode("utf-8", errors="replace").rstrip("\r\n")
+                        if line.startswith("data:"):
+                            lines.append(line[5:].lstrip())
+                        elif not line and lines:
+                            try:
+                                return json.loads("\n".join(lines))
+                            except ValueError:
+                                return {"non_json": "\n".join(lines)[:2000]}
+        except TimeoutError:
+            return {"note": "no message within 20 s"}
+        except FmTrackError as err:
+            return {"error": str(err)}
+        except aiohttp.ClientError as err:
+            return {"error": type(err).__name__}
+        return {"note": "stream closed without data"}
 
     # --- trips, events, geozones ----------------------------------------
 
@@ -341,3 +425,26 @@ class FmTrackApi:
             raise
         except (aiohttp.ClientError, TimeoutError) as err:
             raise FmTrackConnectionError(type(err).__name__) from None
+
+
+def _walk(value: Any, prefix: str = "") -> list[tuple[str, Any]]:
+    """Flatten nested dicts to (dotted.path, value) pairs."""
+    if isinstance(value, dict):
+        out: list[tuple[str, Any]] = []
+        for key, sub in value.items():
+            out.extend(_walk(sub, f"{prefix}{key}."))
+        return out
+    return [(prefix.rstrip("."), value)]
+
+
+def _shrink(data: Any, object_id: str) -> Any:
+    """Keep diagnostics small: last items of lists; only this object in object lists."""
+    if isinstance(data, list):
+        mine = [i for i in data if isinstance(i, dict) and object_id in (i.get("id"), i.get("object_id"))]
+        return {"total": len(data), "items": mine or data[-3:]}
+    if isinstance(data, dict):
+        out: dict[str, Any] = {}
+        for key, value in data.items():
+            out[key] = _shrink(value, object_id) if isinstance(value, list) else value
+        return out
+    return data

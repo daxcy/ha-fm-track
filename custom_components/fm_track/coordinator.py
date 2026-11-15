@@ -91,6 +91,7 @@ class FmTrackCoordinator(DataUpdateCoordinator[dict[str, VehicleState]]):
         self.stream_connected = False
         self.stream_last_message: datetime | None = None
         self.stream_messages = 0
+        self.raw_stream: dict[str, dict[str, Any]] = {}
 
         self._event_listeners: dict[str, list[EventListener]] = {}
 
@@ -382,6 +383,7 @@ class FmTrackCoordinator(DataUpdateCoordinator[dict[str, VehicleState]]):
         update = parse_object(raw)
         if update is None or not self._wanted(update.object_id):
             return
+        self.raw_stream[update.object_id] = raw
         data = dict(self.data or {})
         existing = data.get(update.object_id)
         if existing is None:
