@@ -103,6 +103,7 @@ async def _input_inventory(c, object_id: str) -> dict[str, Any]:
         "last_record": records[-1].get("datetime") if records else None,
         "triggers": sorted({str(r.get("inputs", {}).get("device_inputs", {}).get("input_trigger")) for r in records}),
         "inputs": dict(sorted(seen.items())),
+        "recent_records": records[-10:],
     }
 
 
