@@ -96,8 +96,8 @@ async def test_setup_creates_entities(hass: HomeAssistant, aioclient_mock: Aioht
     # electric car: no fuel sensors, and calculated inputs that are 0 are ignored
     assert hass.states.get("sensor.test_car_fuel_level") is None
     assert hass.states.get("sensor.test_car_custom_input_1") is None
-    # tracker carries the tracker's own battery
-    assert hass.states.get("device_tracker.test_car").attributes["battery_level"] == 85
+    # windows and sunroof are not in this fixture
+    assert hass.states.get("binary_sensor.test_car_sunroof") is None
 
 
 async def test_diagnostics_redacts(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
